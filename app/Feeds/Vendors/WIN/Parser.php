@@ -4,12 +4,22 @@ namespace App\Feeds\Vendors\WIN;
 
 use App\Feeds\Parser\HtmlParser;
 use App\Feeds\Utils\ParserCrawler;
+use App\Helpers\FeedHelper;
+use App\Helpers\StringHelper;
 
 class Parser extends HtmlParser
 {
-    private const MAIN_DOMAIN = 'http://winsomewood.com/';
-    protected array $attributes_list = [];
-    protected function initAttributesList(): void
+    private array $attributes_list;
+    private array $description_and_attributes;
+    private array $dims;
+    public function beforeParse(): void
+    {
+        $this->initAttributesList();
+        $this->initDescriptionAndAttributes();
+        $this->initDims();
+    }
+
+    private function initAttributesList(): void
     {
         $contents = $this->node->getContent('ul.main-meta>li:not(.dimensions)');
         $attributes = [];
@@ -26,14 +36,48 @@ class Parser extends HtmlParser
         $this->attributes_list = $attributes;
     }
 
+    private function initDims(): void
+    {
+        $node = $this->node->filter('.main-meta ul.dimensions', 0);
+        if (!$node->count()) {
+            $text = '';
+        } else {
+            $text = $node->text();
+        }
+
+        $this->dims = FeedHelper::getDimsInString($text, 'x',1, 2, 0);
+    }
+
+    private function initDescriptionAndAttributes(): void
+    {
+        $this->description_and_attributes = FeedHelper::getShortsAndAttributesInDescription($this->getDescriptionSource(), [], [], $this->getAttributesSource());
+    }
+
+    private function getAttributesSource(): ?array
+    {
+        $attributes = $this->attributes_list;
+        unset($attributes['Category'], $attributes['Item #'], $attributes['Collection']);
+
+        return $attributes;
+    }
+
+    private function getDescriptionSource(): string
+    {
+        $result = $this->node->filterXPath('//li[contains(@class, "item")]')->each( function (ParserCrawler $c ) {
+            return '<p>' . $c->getText('h3 a') . '</p>'
+                . $c->filter('ul.meta')->outerHtml();
+        });
+
+        if (!empty($result)) {
+            return '<h2>Set components</h2>' . implode('', $result);
+        }
+
+        return '';
+    }
+
     public function getMpn(): string
     {
         return $this->attributes_list['Item #'] ?? '';
-    }
-
-    public function beforeParse(): void
-    {
-        $this->initAttributesList();
     }
 
     public function getCostToUs(): float
@@ -50,7 +94,7 @@ class Parser extends HtmlParser
     {
         $images = array_values(array_unique($this->getLinks('.thumbnails a')));
         if (!count($images)) {
-            $images = [ self::MAIN_DOMAIN . $this->getAttr('img.large', 'src') ];
+            $images = $this->getSrcImages('img.large');
         }
 
         return $images;
@@ -63,67 +107,41 @@ class Parser extends HtmlParser
 
     public function getBrand(): ?string
     {
-        return 'Winsome Trading';
+        return $this->attributes_list['Collection'] ?? null;
     }
 
     public function getCategories(): array
     {
+        $categories = [];
         if (array_key_exists('Category', $this->attributes_list)) {
-            return [
-                $this->attributes_list['Category']
-            ];
+            $categories[] = $this->attributes_list['Category'];
         }
 
-        return [];
-    }
-
-    public function getAttributes(): ?array
-    {
-        $attributes = $this->attributes_list;
-        unset($attributes['Category'], $attributes['Item #']);
-
-        return $attributes;
-    }
-
-    protected function getDimension(int $col): ?float
-    {
-        $node = $this->node->filter('.main-meta ul.dimensions', 0);
-        if (!$node->count()) {
-            return null;
-        }
-
-        $text = $node->text();
-        $parts = explode(' x ', $text);
-
-        return (float) str_replace(' in', '', $parts[$col]);
+        return $categories;
     }
 
     public function getDimX(): ?float
     {
-        return $this->getDimension(1);
+        return $this->dims['x'];
     }
 
     public function getDimY(): ?float
     {
-        return $this->getDimension(2);
+        return $this->dims['y'];
     }
 
     public function getDimZ(): ?float
     {
-        return $this->getDimension(0);
+        return $this->dims['z'];
+    }
+
+    public function getAttributes(): ?array
+    {
+        return $this->description_and_attributes['attributes'];
     }
 
     public function getDescription(): string
     {
-        $result = $this->node->filterXPath('//li[contains(@class, "item")]')->each( function (ParserCrawler $c ) {
-            return '<p>' . $c->getText('h3 a') . '</p>'
-                . $c->filter('ul.meta')->outerHtml();
-        });
-
-        if (!empty($result)) {
-            return '<h2>Set components</h2>' . implode('', $result);
-        }
-
-        return '';
+        return StringHelper::isNotEmpty($this->description_and_attributes['description']) ? $this->description_and_attributes['description'] : $this->getProduct();
     }
 }
