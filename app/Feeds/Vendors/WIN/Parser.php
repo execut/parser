@@ -8,7 +8,7 @@ use App\Feeds\Utils\ParserCrawler;
 class Parser extends HtmlParser
 {
     private const MAIN_DOMAIN = 'http://winsomewood.com/';
-    protected array $attributesList = [];
+    protected array $attributes_list = [];
     protected function initAttributesList(): void
     {
         $contents = $this->node->getContent('ul.main-meta>li:not(.dimensions)');
@@ -23,12 +23,12 @@ class Parser extends HtmlParser
             $attributes[$key] = $value;
         }
 
-        $this->attributesList = $attributes;
+        $this->attributes_list = $attributes;
     }
 
     public function getMpn(): string
     {
-        return $this->attributesList['Item #'] ?? '';
+        return $this->attributes_list['Item #'] ?? '';
     }
 
     public function beforeParse(): void
@@ -68,9 +68,9 @@ class Parser extends HtmlParser
 
     public function getCategories(): array
     {
-        if (array_key_exists('Category', $this->attributesList)) {
+        if (array_key_exists('Category', $this->attributes_list)) {
             return [
-                $this->attributesList['Category']
+                $this->attributes_list['Category']
             ];
         }
 
@@ -79,7 +79,7 @@ class Parser extends HtmlParser
 
     public function getAttributes(): ?array
     {
-        $attributes = $this->attributesList;
+        $attributes = $this->attributes_list;
         unset($attributes['Category'], $attributes['Item #']);
 
         return $attributes;
