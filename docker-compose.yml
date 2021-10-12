@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 
 services:
     php:
@@ -8,8 +8,18 @@ services:
         container_name: php_xfeeds
         restart: always
         working_dir: /var/www/app
+        environment:
+            XDEBUG_CONFIG: "remote_host=192.168.220.1 remote_enable=1"
+            PHP_IDE_CONFIG: "serverName=Docker"
         volumes:
             - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
 #            - ./docker/php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
             - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
             - ./:/var/www/app
+networks:
+    internal:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+                - subnet: 192.168.220.0/28
