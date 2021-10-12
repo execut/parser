@@ -2,9 +2,8 @@
 
 namespace App\Feeds\Vendors\WIN;
 
+use App\Feeds\Feed\FeedItem;
 use App\Feeds\Processor\HttpProcessor;
-use App\Feeds\Utils\Data;
-use App\Feeds\Utils\Link;
 
 class Vendor extends HttpProcessor
 {
@@ -12,8 +11,9 @@ class Vendor extends HttpProcessor
     public const PRODUCT_LINK_CSS_SELECTORS = [ '.item h3 a' ];
 
     public array $first = [ 'http://winsomewood.com/products?query=' ];
-    public function getCategoriesLinks(Data $data, string $url): array
+
+    public function isValidFeedItem(FeedItem $fi ): bool
     {
-        return [ 'http://winsomewood.com/products?query=' ];
+        return !empty($fi->getMpn());
     }
 }

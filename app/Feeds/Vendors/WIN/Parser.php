@@ -2,9 +2,8 @@
 
 namespace App\Feeds\Vendors\WIN;
 
-use App\Feeds\Feed\FeedItem;
 use App\Feeds\Parser\HtmlParser;
-use App\Helpers\StringHelper;
+use App\Feeds\Utils\ParserCrawler;
 
 class Parser extends HtmlParser
 {
@@ -16,8 +15,11 @@ class Parser extends HtmlParser
         $attributes = [];
         foreach ($contents as $content) {
             $parts = explode(': ', $content, 2);
-            $key = $parts[0];
-            $value = $parts[1];
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            [$key, $value] = $parts;
             $attributes[$key] = $value;
         }
 
@@ -78,8 +80,7 @@ class Parser extends HtmlParser
     public function getAttributes(): ?array
     {
         $attributes = $this->attributesList;
-        unset($attributes['Category']);
-        unset($attributes['Item #']);
+        unset($attributes['Category'], $attributes['Item #']);
 
         return $attributes;
     }
@@ -99,29 +100,30 @@ class Parser extends HtmlParser
 
     public function getDimX(): ?float
     {
-        // length
         return $this->getDimension(1);
     }
 
     public function getDimY(): ?float
     {
-        // height
         return $this->getDimension(2);
     }
 
     public function getDimZ(): ?float
     {
-        // width
         return $this->getDimension(0);
     }
 
     public function getDescription(): string
     {
-        return parent::getDescription();
-    }
+        $result = $this->node->filterXPath('//li[contains(@class, "item")]')->each( function (ParserCrawler $c ) {
+            return '<p>' . $c->getText('h3 a') . '</p>'
+                . $c->filter('ul.meta')->outerHtml();
+        });
 
-    public function getShortDescription(): array
-    {
-        return [];
+        if (!empty($result)) {
+            return '<h2>Set components</h2>' . implode('', $result);
+        }
+
+        return '';
     }
 }
