@@ -23,7 +23,9 @@ class Parser extends HtmlParser
             }
 
             [$key, $value] = $parts;
-            $attributes[$key] = $value;
+            if ($value !== 'N/A') {
+                $attributes[$key] = $value;
+            }
         }
 
         $this->attributes_list = $attributes;
