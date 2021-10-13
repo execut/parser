@@ -44,10 +44,12 @@ class Parser extends HtmlParser
 
     private function getDescriptionSource(): string
     {
-        $result = $this->node->filterXPath('//li[contains(@class, "item")]')->each( function (ParserCrawler $c ) {
-            return '<p>' . $c->getText('h3 a') . '</p>'
-                . $c->filter('ul.meta')->outerHtml();
-        });
+        if ($this->exists('.components')) {
+            $result = $this->filter('li.item')->each(function (ParserCrawler $c) {
+                return '<p>' . $c->getText('h3 a') . '</p>'
+                    . $c->filter('ul.meta')->outerHtml();
+            });
+        }
 
         if (!empty($result)) {
             return '<h2>Set components</h2>' . implode('', $result);
