@@ -30,7 +30,19 @@ class Parser extends HtmlParser
 
         unset($attributes['Category'], $attributes['Item #'], $attributes['Collection']);
 
-        $this->description_and_attributes = FeedHelper::getShortsAndAttributesInDescription($this->getDescriptionSource(), [], [], $attributes);
+        $description_source = '';
+        if ($this->exists('.components')) {
+            $this->filter('li.item')->each(function (ParserCrawler $c) use (&$description_source) {
+                $description_source .= '<p>' . $c->getText('h3 a') . '</p>'
+                    . $c->filter('ul.meta')->outerHtml();
+            });
+        }
+
+        if (!empty($description_source)) {
+            $description_source = '<h2>Set components</h2>' . $description_source;
+        }
+
+        $this->description_and_attributes = FeedHelper::getShortsAndAttributesInDescription($description_source, [], [], $attributes);
 
         $node = $this->node->filter('.main-meta ul.dimensions', 0);
         if (!$node->count()) {
@@ -40,22 +52,6 @@ class Parser extends HtmlParser
         }
 
         $this->dims = FeedHelper::getDimsInString($text, 'x',1, 2, 0);
-    }
-
-    private function getDescriptionSource(): string
-    {
-        if ($this->exists('.components')) {
-            $result = $this->filter('li.item')->each(function (ParserCrawler $c) {
-                return '<p>' . $c->getText('h3 a') . '</p>'
-                    . $c->filter('ul.meta')->outerHtml();
-            });
-        }
-
-        if (!empty($result)) {
-            return '<h2>Set components</h2>' . implode('', $result);
-        }
-
-        return '';
     }
 
     public function getMpn(): string
