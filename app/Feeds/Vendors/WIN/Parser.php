@@ -98,22 +98,22 @@ class Parser extends HtmlParser
 
     public function getDimX(): ?float
     {
-        return $this->dims['x'];
+        return $this->dims['x'] ?? null;
     }
 
     public function getDimY(): ?float
     {
-        return $this->dims['y'];
+        return $this->dims['y'] ?? null;
     }
 
     public function getDimZ(): ?float
     {
-        return $this->dims['z'];
+        return $this->dims['z'] ?? null;
     }
 
     public function getAttributes(): ?array
     {
-        return $this->description_and_attributes['attributes'];
+        return $this->description_and_attributes['attributes'] ?? null;
     }
 
     public function getDescription(): string
