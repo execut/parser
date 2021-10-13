@@ -14,13 +14,6 @@ class Parser extends HtmlParser
     private array $dims;
     public function beforeParse(): void
     {
-        $this->initAttributesList();
-        $this->initDescriptionAndAttributes();
-        $this->initDims();
-    }
-
-    private function initAttributesList(): void
-    {
         $contents = $this->node->getContent('ul.main-meta>li:not(.dimensions)');
         $attributes = [];
         foreach ($contents as $content) {
@@ -34,10 +27,11 @@ class Parser extends HtmlParser
         }
 
         $this->attributes_list = $attributes;
-    }
 
-    private function initDims(): void
-    {
+        unset($attributes['Category'], $attributes['Item #'], $attributes['Collection']);
+
+        $this->description_and_attributes = FeedHelper::getShortsAndAttributesInDescription($this->getDescriptionSource(), [], [], $attributes);
+
         $node = $this->node->filter('.main-meta ul.dimensions', 0);
         if (!$node->count()) {
             $text = '';
@@ -46,19 +40,6 @@ class Parser extends HtmlParser
         }
 
         $this->dims = FeedHelper::getDimsInString($text, 'x',1, 2, 0);
-    }
-
-    private function initDescriptionAndAttributes(): void
-    {
-        $this->description_and_attributes = FeedHelper::getShortsAndAttributesInDescription($this->getDescriptionSource(), [], [], $this->getAttributesSource());
-    }
-
-    private function getAttributesSource(): ?array
-    {
-        $attributes = $this->attributes_list;
-        unset($attributes['Category'], $attributes['Item #'], $attributes['Collection']);
-
-        return $attributes;
     }
 
     private function getDescriptionSource(): string
@@ -112,12 +93,7 @@ class Parser extends HtmlParser
 
     public function getCategories(): array
     {
-        $categories = [];
-        if (array_key_exists('Category', $this->attributes_list)) {
-            $categories[] = $this->attributes_list['Category'];
-        }
-
-        return $categories;
+        return isset($this->attributes_list['Category']) ? [$this->attributes_list['Category']] : [];
     }
 
     public function getDimX(): ?float
