@@ -18,7 +18,7 @@ class Vendor extends SitemapHttpProcessor
 
     public function isValidFeedItem(FeedItem $fi ): bool
     {
-        return !empty($fi->getMpn());
+        return !empty($fi->getMpn()) || count($fi->getChildProducts());
     }
 
     public function filterProductLinks(Link $link): bool

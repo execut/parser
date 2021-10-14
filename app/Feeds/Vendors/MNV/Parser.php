@@ -67,7 +67,7 @@ class Parser extends HtmlParser
 
     public function getImages(): array
     {
-        return $this->getSrcImages('.woocommerce-product-gallery__image img');
+        return $this->getSrcImages('.woocommerce-product-gallery__image img, .more-photos img');
     }
 
     public function getWeight(): ?float
