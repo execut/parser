@@ -121,7 +121,8 @@ class Parser extends HtmlParser
                 if (StringHelper::isNotEmpty($sizeValue)) {
                     $sizeText = $this->getText('#pa_choose-' . $attributeId . ' option[value="' . $sizeValue . '"]');
                     if (!$sizeText) {
-                        throw new \Exception('Wrong option value ' . var_export($variation, true));
+                        $sizeText = ucwords(str_replace('-', '', $sizeValue));
+                        echo 'Generated ' . $sizeText . "\n";
                     }
 
                     $child_product->setAttributes([
