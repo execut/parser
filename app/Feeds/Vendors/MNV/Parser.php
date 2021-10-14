@@ -40,7 +40,9 @@ class Parser extends HtmlParser
 
     public function getCostToUs(): float
     {
-        return $this->getMoney('.woocommerce-Price-amount');
+        $money = $this->getMoney('.woocommerce-Price-amount');
+
+        return $money > 0 ? $money : 1;
     }
 
     public function isGroup(): bool
@@ -122,7 +124,6 @@ class Parser extends HtmlParser
                     $sizeText = $this->getText('#pa_choose-' . $attributeId . ' option[value="' . $sizeValue . '"]');
                     if (!$sizeText) {
                         $sizeText = ucwords(str_replace('-', ' ', $sizeValue));
-                        echo 'Generated ' . $sizeText . "\n";
                     }
 
                     $child_product->setAttributes([
