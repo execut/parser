@@ -148,7 +148,7 @@ class Parser extends HtmlParser
 
             if (!empty($variation['display_price'])) {
                 $price = StringHelper::getMoney($variation['display_price']);
-                if ($price >= 0) {
+                if ($price <= 0) {
                     $price = 1;
                 }
             } else {
