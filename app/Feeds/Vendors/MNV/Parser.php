@@ -23,8 +23,8 @@ class Parser extends HtmlParser
             $this->dims = FeedHelper::getDimsInString($this->getText('.woocommerce-product-attributes-item--dimensions .woocommerce-product-attributes-item__value'), '×');
         }
 
-        $desc = FeedHelper::getShortsAndAttributesInDescription( $this->getHtml( '.tab-description' ), [ '/.*\$.*/s', '/.*\breviews\b.*/', '/.*logged\sin\scustomers.*/' ] );
-        $desc[ 'description' ] = FeedHelper::cleanProductData( $desc[ 'description' ]);
+        $desc = FeedHelper::getShortsAndAttributesInDescription( $this->getHtml( '.tab-description' ) );
+        $desc[ 'description' ] = FeedHelper::cleanProductData( $desc[ 'description' ], [ '/.*\$.*/s', '/.*\breviews\b.*/', '/.*logged\sin\scustomers.*/' ] );
         $desc[ 'description' ] = str_replace( '�', '', $desc[ 'description' ] );
         $desc[ 'description' ] = preg_replace( '/(.*?)(<table.*?<\/table>)?/s', '${1}', $desc[ 'description' ] );
 
