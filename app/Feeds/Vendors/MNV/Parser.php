@@ -12,6 +12,7 @@ class Parser extends HtmlParser
 {
     private ?array $variations = null;
     private ?array $dims = null;
+    private array $description_data;
     public function beforeParse(): void
     {
         $json = $this->getAttr('.variations_form', 'data-product_variations');
@@ -21,6 +22,13 @@ class Parser extends HtmlParser
         } else {
             $this->dims = FeedHelper::getDimsInString($this->getText('.woocommerce-product-attributes-item--dimensions .woocommerce-product-attributes-item__value'), '×');
         }
+
+        $desc = FeedHelper::getShortsAndAttributesInDescription( $this->getHtml( '.tab-description' ), [ '/.*\$.*/s', '/.*\breviews\b.*/', '/.*logged\sin\scustomers.*/' ] );
+        $desc[ 'description' ] = FeedHelper::cleanProductData( $desc[ 'description' ]);
+        $desc[ 'description' ] = str_replace( '�', '', $desc[ 'description' ] );
+        $desc[ 'description' ] = preg_replace( '/(.*?)(<table.*?<\/table>)?/s', '${1}', $desc[ 'description' ] );
+
+        $this->description_data = $desc;
     }
 
     public function getMpn(): string
@@ -53,14 +61,19 @@ class Parser extends HtmlParser
         return (bool) $this->variations;
     }
 
-    public function getListPrice(): ?float
-    {
-        return $this->getCostToUs();
-    }
-
     public function getDescription(): string
     {
-        return FeedHelper::cleanProductDescription($this->getText('.tab-description'));
+        return StringHelper::isNotEmpty($this->description_data['description']) ? $this->description_data['description'] : $this->getProduct();
+    }
+
+    public function getAttributes(): ?array
+    {
+        return $this->description_data['attributes'] ?? null;
+    }
+
+    public function getShortDescription(): array
+    {
+        return $this->description_data['short_description'] ?? [];
     }
 
     public function getCategories(): array
@@ -158,7 +171,6 @@ class Parser extends HtmlParser
                 $price = 1;
             }
 
-            $child_product->setListPrice($price);
             $child_product->setCostToUs($price);
 
             if (!empty($variation['image']['url'])) {
