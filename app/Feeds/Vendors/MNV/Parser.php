@@ -34,7 +34,7 @@ class Parser extends HtmlParser
     public function getMpn(): string
     {
         $sku = $this->getText('.sku');
-        if (strtolower($sku) === 'N/A') {
+        if (strtolower($sku) === 'n/a') {
             $sku = '';
         }
 
