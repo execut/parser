@@ -41,8 +41,11 @@ class Parser extends HtmlParser
     public function getCostToUs(): float
     {
         $money = $this->getMoney('.woocommerce-Price-amount');
+        if (!$money) {
+            $money = StringHelper::getMoney($this->getAttr('meta[property="og:price:amount"]', 'content'));
+        }
 
-        return $money > 0 ? $money : 1;
+        return $money;
     }
 
     public function isGroup(): bool
