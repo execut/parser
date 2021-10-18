@@ -20,7 +20,12 @@ class Parser extends HtmlParser
             $decoder = new JsonDecoder();
             $this->variations = $decoder->decode($json);
         } else {
-            $this->dims = FeedHelper::getDimsInString($this->getText('.woocommerce-product-attributes-item--dimensions .woocommerce-product-attributes-item__value'), '×');
+            $dims_source = $this->getText('.woocommerce-product-attributes-item--dimensions .woocommerce-product-attributes-item__value');
+            if (strtolower($dims_source) === 'n/a') {
+                $dims_source = '';
+            }
+
+            $this->dims = FeedHelper::getDimsInString($dims_source, '×');
         }
 
         $desc = FeedHelper::getShortsAndAttributesInDescription( $this->getHtml( '.tab-description' ) );
@@ -117,10 +122,6 @@ class Parser extends HtmlParser
 
     public function getChildProducts(FeedItem $parent_fi): array
     {
-        if (!$this->isGroup()) {
-            return [];
-        }
-
         $child_products = [];
         foreach ($this->variations as $variation) {
             $variation = array_filter($variation);
